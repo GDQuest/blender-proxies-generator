@@ -7,7 +7,7 @@ def readme():
 
 
 setup(name='bpsproxy',
-      version='0.1.0',
+      version='0.1.1',
       description='Blender Power Sequencer proxy generator tool',
       long_description=readme(),
       classifiers=[
@@ -25,13 +25,13 @@ setup(name='bpsproxy',
           'Topic :: Multimedia :: Video',
           'Topic :: Utilities'
       ],
-      url='https://github.com/GDquest/Blender-power-sequencer/',
+      url='https://gitlab.com/razcore/bpsproxy',
       keywords='blender proxy vse sequence editor productivity',
-      author='GDquest',
-      author_email='nathan@gdquest.com',
+      author='Răzvan C. Rădulescu',
+      author_email='razcore.art@gmail.com',
       license='GPLv3',
       packages=['bpsproxy'],
-      install_requires=[],
+      install_requires=['tqdm'],
       zip_safe=False,
       entry_points={'console_scripts': ['bpsproxy=bpsproxy.__main__:main']},
       include_package_data=True)

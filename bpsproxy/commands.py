@@ -1,5 +1,6 @@
 import os.path as osp
 from itertools import chain
+from .utils import get_path
 
 
 def get_commands_image_1(cfg, clargs, **kwargs):
@@ -36,17 +37,7 @@ def get_commands(cfg, clargs, *, what, **kwargs):
     get_commands_f = {'video': get_commands_video_1,
                       'image': get_commands_image_1}
     ps = filter(lambda p: osp.splitext(p)[1] in cfg['extensions'][what], kwargs['path_i'])
-    if what is 'video':
-        ps = map(lambda p: (p, osp.join(osp.dirname(p),
-                                        cfg['proxy_directory'],
-                                        osp.basename(p),
-                                        'proxy_{size}.avi')), ps)
-    elif what is 'image':
-        ps = map(lambda p: (p, osp.join(osp.dirname(p),
-                                        cfg['proxy_directory'],
-                                        'images',
-                                        '{size}',
-                                        '{file}_proxy.jpg'.format(file=osp.basename(p)))), ps)
+    ps = map(lambda p: (p, get_path(cfg, clargs, what, p, **kwargs)), ps)
     out = chain.from_iterable(map(
         lambda p: get_commands_f[what](cfg, clargs, path_i_1=p[0], path_o_1=p[1], **kwargs), ps))
     return map(lambda c: (what, c), out)
