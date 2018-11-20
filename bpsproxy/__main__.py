@@ -6,8 +6,10 @@ import argparse as ap
 import glob as g
 import os.path as osp
 
+from .call import call, call_makedirs
 from .commands import get_commands_all
 from .config import CONFIG as C
+from .utils import checktools, ToolError
 
 
 def find_files(directory='.',
@@ -17,7 +19,7 @@ def find_files(directory='.',
     xs = filter(lambda x: osp.isfile(x), xs)
     xs = filter(lambda x: ignored_directory not in osp.dirname(x), xs)
     xs = [x for x in xs if osp.splitext(x)[1] in extensions]
-    return xs
+    return len(xs), xs
 
 
 def parse_arguments(cfg):
@@ -45,8 +47,20 @@ def parse_arguments(cfg):
 
 
 def main():
-    clargs = parse_arguments(C)
-    for c in get_commands_all(C, clargs, **{'path_i': find_files()}):
-        print(' '.join(c[1]))
-        break
+    tools = ['ffmpeg']
+    try:
+        clargs = parse_arguments(C)
+        checktools(tools)
+        n, path_i = find_files(clargs.working_directory)
+        kwargs = {'path_i': path_i,
+                  'n': n}
+        call_makedirs(C, clargs, **kwargs)
+        call(C, clargs, cmds=get_commands_all(C, clargs, **kwargs), **kwargs)
+    except ToolError as e:
+        print(e)
+
+
+# this is so it can be ran as a module: `python3 -m bpsrender` (for testing)
+if __name__ == '__main__':
+    main()
 
