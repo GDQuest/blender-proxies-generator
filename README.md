@@ -16,7 +16,7 @@ After installing the script, get help by writing `bpsproxy -h`:
 
 ```
 usage: bpsproxy [-h] [-p {webm,mp4,nvenc}] [-s {25,50,100} [{25,50,100} ...]]
-                [--dry-run]
+                [-v] [--dry-run]
                 [working_directory]
 
 Create proxies for Blender VSE using FFMPEG.
@@ -31,6 +31,7 @@ optional arguments:
   -s {25,50,100} [{25,50,100} ...], --sizes {25,50,100} [{25,50,100} ...]
                         A list of sizes of the proxies to render, either 25,
                         50, or 100
+  -v, --verbose         Increase verbosity level (eg. -vvv).
   --dry-run             Run the script without actual rendering or creating
                         files and folders. For DEBUGGING purposes
 ```

@@ -7,7 +7,7 @@ def readme():
 
 
 setup(name='bpsproxy',
-      version='0.1.1',
+      version='0.1.2',
       description='Blender Power Sequencer proxy generator tool',
       long_description=readme(),
       classifiers=[
