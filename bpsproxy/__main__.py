@@ -4,18 +4,37 @@ Offers mp4 and webm options
 """
 import argparse as ap
 import glob as g
+import logging as lg
 import os.path as osp
 from itertools import compress, starmap, tee
 
 from .call import call, call_makedirs
 from .commands import get_commands, get_commands_vi
 from .config import CONFIG as C
-from .utils import checktools, ToolError
+from .config import LOGGER, LOGLEV
+from .utils import checktools, printw, printd, ToolError
 
 
 def find_files(directory='.',
                ignored_directory=C['proxy_directory'],
                extensions=C['extensions']['all']):
+    """
+    Find files to process.
+
+    Parameters
+    ----------
+    directory: str
+    Working directory.
+    ignored_directory: str
+    Don't check for files in this directory. By default `BL_proxy`.
+    extensions: set(str)
+    Set of file extensions for filtering the directory tree.
+
+    Returns
+    -------
+    out: list(str)
+    List of file paths to be processed.
+    """
     xs = g.iglob('{}/**'.format(osp.abspath(directory)), recursive=True)
     xs = filter(lambda x: osp.isfile(x), xs)
     xs = filter(lambda x: ignored_directory not in osp.dirname(x), xs)
@@ -25,7 +44,17 @@ def find_files(directory='.',
 
 def parse_arguments(cfg):
     """
-    Returns an argparse object with all command line arguments
+    Uses `argparse` to parse the command line arguments.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+
+    Returns
+    -------
+    out: Namespace
+    Command line arguments.
     """
     p = ap.ArgumentParser(description='Create proxies for Blender VSE using FFMPEG.')
     p.add_argument('working_directory', nargs='?', default='.',
@@ -40,25 +69,50 @@ def parse_arguments(cfg):
                    default=[25],
                    choices=cfg['proxy_sizes'],
                    help='A list of sizes of the proxies to render, either 25, 50, or 100')
+    p.add_argument('-v', '--verbose',
+                   action='count',
+                   default=0,
+                   help='Increase verbosity level (eg. -vvv).')
     p.add_argument('--dry-run',
                    action='store_true',
                    help=('Run the script without actual rendering or creating files and'
                          ' folders. For DEBUGGING purposes'))
-    return p.parse_args()
+
+    clargs = p.parse_args()
+    # normalize directory
+    clargs.working_directory = osp.abspath(clargs.working_directory)
+    # --dry-run implies maximum verbosity level
+    clargs.verbose = 99999 if clargs.dry_run else clargs.verbose
+    return clargs
 
 
 def main():
+    """
+    Script entry point.
+    """
     tools = ['ffmpeg']
     try:
+        # get command line arguments and set log level
         clargs = parse_arguments(C)
+        lg.basicConfig(level=LOGLEV[min(clargs.verbose, len(LOGLEV) - 1)])
+
+        # log basic command line arguments
+        clargs.dry_run and LOGGER.info('DRY-RUN')
+        LOGGER.info('WORKING-DIRECTORY :: {}'.format(clargs.working_directory))
+        LOGGER.info('PRESET :: {}'.format(clargs.preset))
+        LOGGER.info('SIZES :: {}'.format(clargs.sizes))
+
+        # check for external dependencies
         checktools(tools)
+
+        # find files to process
         path_i = find_files(clargs.working_directory)
         kwargs = {'path_i': path_i}
 
-        print('Creating directories if necessary...')
+        printw(C, 'Creating directories if necessary')
         call_makedirs(C, clargs, **kwargs)
 
-        print('Checking for existing proxies...')
+        printw(C, 'Checking for existing proxies')
         cmds = tee(get_commands(C, clargs, what='check', **kwargs))
         stdouts = call(C, clargs, cmds=cmds[0], check=False, shell=True, **kwargs)
         checks = map(lambda s: s.strip().split(), stdouts)
@@ -66,14 +120,14 @@ def main():
         kwargs['path_i'] = list(compress(kwargs['path_i'], checks))
 
         if len(kwargs['path_i']) != 0:
-            print('Processing...')
+            printw(C, 'Processing', s='\n')
             cmds = get_commands_vi(C, clargs, **kwargs)
             call(C, clargs, cmds=cmds, **kwargs)
         else:
-            print('All proxies exist, nothing to do.')
-        print('Done.')
+            printd(C, 'All proxies exist or no files found, nothing to process', s='\n')
+        printd(C, 'Done')
     except ToolError as e:
-        print(e)
+        LOGGER.error(e)
 
 
 # this is so it can be ran as a module: `python3 -m bpsrender` (for testing)

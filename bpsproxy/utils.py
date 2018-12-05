@@ -67,3 +67,18 @@ def what_vi(cfg, clargs, p, **kwargs):
 def kickstart(it):
     deque(it, maxlen=0)
 
+
+def printw(cfg, text, s='\n', e='...', p='', **kwargs):
+    p = p or cfg['pre']['work']
+    print('{s}{p} {}{e}'.format(text, s=s, e=e, p=p), **kwargs)
+
+
+def printd(cfg, text, s='', e='.', p='', **kwargs):
+    p = p or cfg['pre']['done']
+    printw(cfg, text, s=s, e=e, p=p, **kwargs)
+
+
+def prints(cfg, text, s='', e='.', p='', **kwargs):
+    p = p or cfg['pre']['skip']
+    printw(cfg, text, s=s, e=e, p=p, **kwargs)
+

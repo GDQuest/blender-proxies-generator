@@ -2,23 +2,60 @@
 import os
 import subprocess as sp
 import sys
+
 from functools import partial
-from itertools import chain
+from itertools import chain, tee
 from tqdm import tqdm
+from .config import LOGGER
 from .utils import get_dir, kickstart
 
 WINDOWS = ('win32', 'cygwin')
 
 
 def call_makedirs(cfg, clargs, **kwargs):
+    """
+    Make BL_proxy directories if necessary.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    kwargs: dict
+    MANDATORY: path_i
+    Dictionary with additional information from previous step.
+    """
     path_i = kwargs['path_i']
     path_d = map(partial(get_dir, cfg, clargs, **kwargs), path_i)
-    path_d = chain(*path_d)
-    path_d = (os.makedirs(p, exist_ok=True) for p in path_d)
+    path_d = tee(chain(*path_d))
+    kickstart(map(lambda p: LOGGER.info('Directory @ {}'.format(p)), path_d[0]))
+    if clargs.dry_run:
+        return
+    path_d = (os.makedirs(p, exist_ok=True) for p in path_d[1])
     kickstart(path_d)
 
 
 def call(cfg, clargs, *, cmds, **kwargs):
+    """
+    Generic subprocess calls.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    cmds: iter(tuple(str))
+    kwargs: dict
+    MANDATORY: path_i
+    Dictionary with additional information from previous step.
+
+    Returns
+    -------
+    out: str
+    Stdout & Stderr gathered from subprocess call.
+    """
     kwargs_s = {'stdout': sp.PIPE,
                 'stderr': sp.STDOUT,
                 'universal_newlines': True,
@@ -27,8 +64,12 @@ def call(cfg, clargs, *, cmds, **kwargs):
                 'creationflags': sp.CREATE_NEW_PROCESS_GROUP if sys.platform in WINDOWS else 0}
     if kwargs_s['shell']:
         cmds = map(lambda cmd: (cmd[0], ' '.join(cmd[1])), cmds)
+    cmds = tee(cmds)
+    kickstart(map(lambda cmd: LOGGER.debug('CALL :: {}'.format(cmd[1])), cmds[0]))
+    if clargs.dry_run:
+        return []
     n = len(kwargs['path_i'])
-    ps = tqdm(map(lambda cmd: sp.run(cmd[1], **kwargs_s), cmds),
+    ps = tqdm(map(lambda cmd: sp.run(cmd[1], **kwargs_s), cmds[1]),
               total=n,
               unit='file' if n == 1 else 'files')
     return [p.stdout for p in ps]

@@ -4,6 +4,25 @@ from .utils import get_path
 
 
 def get_commands_check(cfg, clargs, **kwargs):
+    """
+    ffprobe subprocess command generation.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    cmds: iter(tuple(str))
+    kwargs: dict
+    MANDATORY: path_i_1, path_o_1
+    Dictionary with additional information from previous step.
+
+    Returns
+    -------
+    out: iter(tuple(str))
+    Iterator containing commands.
+    """
     cmd = ('ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of'
            ' default=noprint_wrappers=1:nokey=1 {file}')
     out = map(lambda s: kwargs['path_o_1'].format(size=s), clargs.sizes)
@@ -13,6 +32,25 @@ def get_commands_check(cfg, clargs, **kwargs):
 
 
 def get_commands_image_1(cfg, clargs, **kwargs):
+    """
+    ffmpeg subprocess command generation for processing an image.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    cmds: iter(tuple(str))
+    kwargs: dict
+    MANDATORY: path_i_1, path_o_1
+    Dictionary with additional information from previous step.
+
+    Returns
+    -------
+    out: iter(tuple(str))
+    Iterator containing commands.
+    """
     cmd = 'ffmpeg -y -v quiet -stats -i {path_i_1} {common_all}'
     common = '-f apng -filter:v scale=iw*{size}:ih*{size} {path_o_1}'
     common_all = map(lambda s: kwargs['path_o_1'].format(size=s), clargs.sizes)
@@ -24,6 +62,25 @@ def get_commands_image_1(cfg, clargs, **kwargs):
 
 
 def get_commands_video_1(cfg, clargs, **kwargs):
+    """
+    ffmpeg subprocess command generation for processing a video.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    cmds: iter(tuple(str))
+    kwargs: dict
+    MANDATORY: path_i_1, path_o_1
+    Dictionary with additional information from previous step.
+
+    Returns
+    -------
+    out: iter(tuple(str))
+    Iterator containing commands.
+    """
     cmd = 'ffmpeg -y -v quiet -stats -i {path_i_1} {common_all}'
     common = ('-pix_fmt yuv420p'
               ' -g 1'
@@ -43,6 +100,28 @@ def get_commands_video_1(cfg, clargs, **kwargs):
 
 
 def get_commands(cfg, clargs, *, what, **kwargs):
+    """
+    Delegates the creation of commands lists to appropriate functions based on `what` parameter.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    cmds: iter(tuple(str))
+    what: str
+    Determines the returned value (see: Returns[out]).
+    kwargs: dict
+    MANDATORY: path_i
+    Dictionary with additional information from previous step.
+
+    Returns
+    -------
+    out: iter(tuple(str, tuple(str)))
+    An iterator with the 1st element as a tag (the `what` parameter) and the 2nd
+    element as the iterator of the actual commands.
+    """
     get_commands_f = {'video': get_commands_video_1,
                       'image': get_commands_image_1,
                       'check': get_commands_check}
@@ -56,6 +135,26 @@ def get_commands(cfg, clargs, *, what, **kwargs):
 
 
 def get_commands_vi(cfg, clargs, **kwargs):
+    """
+    Delegates the creation of commands lists to appropriate functions for video/image processing.
+
+    Parameters
+    ----------
+    cfg: dict
+    Configuration dictionary.
+    clargs: Namespace
+    Command line arguments.
+    cmds: iter(tuple(str))
+    kwargs: dict
+    MANDATORY: path_i_1, path_o_1
+    Dictionary with additional information from previous step.
+
+    Returns
+    -------
+    out: iter(tuple(str, tuple(str)))
+    An iterator with the 1st element as a tag (the `what` parameter) and the 2nd
+    element as the iterator of the actual commands.
+    """
     ws = filter(lambda x: x is not 'all', cfg['extensions'])
     return chain.from_iterable(map(lambda w: get_commands(cfg, clargs, what=w, **kwargs), ws))
 
