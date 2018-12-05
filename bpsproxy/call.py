@@ -22,10 +22,14 @@ def call(cfg, clargs, *, cmds, **kwargs):
     kwargs_s = {'stdout': sp.PIPE,
                 'stderr': sp.STDOUT,
                 'universal_newlines': True,
+                'check': kwargs.get('check', True),
+                'shell': kwargs.get('shell', False),
                 'creationflags': sp.CREATE_NEW_PROCESS_GROUP if sys.platform in WINDOWS else 0}
-    ps = tqdm(map(lambda cmd: sp.Popen(cmd[1], **kwargs_s), cmds),
-              total=kwargs['n'],
-              unit='file' if kwargs['n'] == 1 else 'files')
-    ps = map(lambda p: p.wait(), ps)
-    kickstart(ps)
+    if kwargs_s['shell']:
+        cmds = map(lambda cmd: (cmd[0], ' '.join(cmd[1])), cmds)
+    n = len(kwargs['path_i'])
+    ps = tqdm(map(lambda cmd: sp.run(cmd[1], **kwargs_s), cmds),
+              total=n,
+              unit='file' if n == 1 else 'files')
+    return [p.stdout for p in ps]
 

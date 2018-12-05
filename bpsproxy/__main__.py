@@ -5,9 +5,10 @@ Offers mp4 and webm options
 import argparse as ap
 import glob as g
 import os.path as osp
+from itertools import compress, starmap, tee
 
 from .call import call, call_makedirs
-from .commands import get_commands_all
+from .commands import get_commands, get_commands_vi
 from .config import CONFIG as C
 from .utils import checktools, ToolError
 
@@ -19,7 +20,7 @@ def find_files(directory='.',
     xs = filter(lambda x: osp.isfile(x), xs)
     xs = filter(lambda x: ignored_directory not in osp.dirname(x), xs)
     xs = [x for x in xs if osp.splitext(x)[1] in extensions]
-    return len(xs), xs
+    return xs
 
 
 def parse_arguments(cfg):
@@ -51,11 +52,26 @@ def main():
     try:
         clargs = parse_arguments(C)
         checktools(tools)
-        n, path_i = find_files(clargs.working_directory)
-        kwargs = {'path_i': path_i,
-                  'n': n}
+        path_i = find_files(clargs.working_directory)
+        kwargs = {'path_i': path_i}
+
+        print('Creating directories if necessary...')
         call_makedirs(C, clargs, **kwargs)
-        call(C, clargs, cmds=get_commands_all(C, clargs, **kwargs), **kwargs)
+
+        print('Checking for existing proxies...')
+        cmds = tee(get_commands(C, clargs, what='check', **kwargs))
+        stdouts = call(C, clargs, cmds=cmds[0], check=False, shell=True, **kwargs)
+        checks = map(lambda s: s.strip().split(), stdouts)
+        checks = starmap(lambda fst, *tail: not all(fst == t for t in tail), checks)
+        kwargs['path_i'] = list(compress(kwargs['path_i'], checks))
+
+        if len(kwargs['path_i']) != 0:
+            print('Processing...')
+            cmds = get_commands_vi(C, clargs, **kwargs)
+            call(C, clargs, cmds=cmds, **kwargs)
+        else:
+            print('All proxies exist, nothing to do.')
+        print('Done.')
     except ToolError as e:
         print(e)
 
