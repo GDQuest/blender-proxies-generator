@@ -2,7 +2,7 @@
 all: clean readme build upload
 
 .PHONY: build
-build:
+build: readme
 	python3 setup.py sdist bdist_wheel
 
 clean:

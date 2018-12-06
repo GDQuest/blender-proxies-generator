@@ -6,13 +6,14 @@ import argparse as ap
 import glob as g
 import logging as lg
 import os.path as osp
+import sys
 from itertools import compress, starmap, tee
 
 from .call import call, call_makedirs
 from .commands import get_commands, get_commands_vi
 from .config import CONFIG as C
 from .config import LOGGER, LOGLEV
-from .utils import checktools, printw, printd, ToolError
+from .utils import checktools, printw, printd, prints, ToolError
 
 
 def find_files(directory='.',
@@ -38,7 +39,7 @@ def find_files(directory='.',
     xs = g.iglob('{}/**'.format(osp.abspath(directory)), recursive=True)
     xs = filter(lambda x: osp.isfile(x), xs)
     xs = filter(lambda x: ignored_directory not in osp.dirname(x), xs)
-    xs = [x for x in xs if osp.splitext(x)[1] in extensions]
+    xs = [x for x in xs if osp.splitext(x)[1].lower() in extensions]
     return xs
 
 
@@ -125,9 +126,13 @@ def main():
             call(C, clargs, cmds=cmds, **kwargs)
         else:
             printd(C, 'All proxies exist or no files found, nothing to process', s='\n')
-        printd(C, 'Done')
     except ToolError as e:
         LOGGER.error(e)
+    except KeyboardInterrupt:
+        prints(C, 'DirtyInterrupt. Exiting', s='\n\n', e='...')
+        sys.exit()
+    finally:
+        printd(C, 'Done')
 
 
 # this is so it can be ran as a module: `python3 -m bpsrender` (for testing)

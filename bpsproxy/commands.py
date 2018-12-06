@@ -127,7 +127,7 @@ def get_commands(cfg, clargs, *, what, **kwargs):
                       'check': get_commands_check}
     ps = (kwargs['path_i']
           if what not in cfg['extensions'] else
-          filter(lambda p: osp.splitext(p)[1] in cfg['extensions'][what], kwargs['path_i']))
+          filter(lambda p: osp.splitext(p)[1].lower() in cfg['extensions'][what], kwargs['path_i']))
     ps = map(lambda p: (p, get_path(cfg, clargs, p, **kwargs)), ps)
     out = chain.from_iterable(map(lambda p: get_commands_f[what](cfg, clargs, path_i_1=p[0],
                                                                  path_o_1=p[1], **kwargs), ps))

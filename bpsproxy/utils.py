@@ -61,7 +61,7 @@ def get_dir(cfg, clargs, path, **kwargs):
 
 
 def what_vi(cfg, clargs, p, **kwargs):
-    return 'video' if osp.splitext(p)[1] in cfg['extensions']['video'] else 'image'
+    return 'video' if osp.splitext(p)[1].lower() in cfg['extensions']['video'] else 'image'
 
 
 def kickstart(it):
