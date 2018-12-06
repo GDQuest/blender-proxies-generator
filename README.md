@@ -38,15 +38,17 @@ optional arguments:
 
 ## External Dependencies
 
-BPSRender requires
+`BPSProxy` requires
 
-- ffmpeg
+- `ffmpeg`
+- `ffprobe`
 
-to be available in the PATH environment variable in order to work. In case BPSRender will catch a missing dependency it will throw a message error similar to this:
+to be available in the `$PATH` environment variable in order to work. In case `BPSProxy` will catch a missing dependency it will throw a message error similar to this:
 
 ```
-BPSProxy couldn't find external dependencies:
+ERROR:BPS:BPSProxy couldn't find external dependencies:
 [X] ffmpeg: NOT FOUND
+[X] ffprobe: NOT FOUND
 Check if you have them properly installed and available in the PATH environemnt variable.
-Exiting...
+~ Exiting.
 ```

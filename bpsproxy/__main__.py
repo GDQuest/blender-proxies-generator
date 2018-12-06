@@ -91,7 +91,7 @@ def main():
     """
     Script entry point.
     """
-    tools = ['ffmpeg']
+    tools = ['ffmpeg', 'ffprobe']
     try:
         # get command line arguments and set log level
         clargs = parse_arguments(C)
@@ -126,13 +126,13 @@ def main():
             call(C, clargs, cmds=cmds, **kwargs)
         else:
             printd(C, 'All proxies exist or no files found, nothing to process', s='\n')
+        printd(C, 'Done')
     except ToolError as e:
         LOGGER.error(e)
+        prints(C, 'Exiting')
     except KeyboardInterrupt:
-        prints(C, 'DirtyInterrupt. Exiting', s='\n\n', e='...')
+        prints(C, 'DirtyInterrupt. Exiting', s='\n\n')
         sys.exit()
-    finally:
-        printd(C, 'Done')
 
 
 # this is so it can be ran as a module: `python3 -m bpsrender` (for testing)

@@ -22,8 +22,7 @@ def checktools(tools):
                                                   tool=tool, path=path or 'NOT FOUND')
                 for tool, path in check['tools']]
         msg += [('Check if you have them properly installed and available in the PATH'
-                 ' environemnt variable.'),
-                'Exiting...']
+                 ' environemnt variable.')]
         raise ToolError('\n'.join(msg))
 
 
