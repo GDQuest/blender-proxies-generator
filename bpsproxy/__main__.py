@@ -36,6 +36,9 @@ def find_files(directory='.',
     out: list(str)
     List of file paths to be processed.
     """
+    if osp.isfile(directory):
+        raise ValueError(("The given path '{}' is a file, but BPSProxy expects a"
+                          ' directory').format(directory))
     xs = g.iglob('{}/**'.format(osp.abspath(directory)), recursive=True)
     xs = filter(lambda x: osp.isfile(x), xs)
     xs = filter(lambda x: ignored_directory not in osp.dirname(x), xs)
@@ -127,7 +130,7 @@ def main():
         else:
             printd(C, 'All proxies exist or no files found, nothing to process', s='\n')
         printd(C, 'Done')
-    except ToolError as e:
+    except (ToolError, ValueError) as e:
         LOGGER.error(e)
         prints(C, 'Exiting')
     except KeyboardInterrupt:

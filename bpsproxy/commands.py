@@ -1,4 +1,5 @@
 import os.path as osp
+import shlex as sl
 from itertools import chain
 from .utils import get_path
 
@@ -24,10 +25,10 @@ def get_commands_check(cfg, clargs, **kwargs):
     Iterator containing commands.
     """
     cmd = ('ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of'
-           ' default=noprint_wrappers=1:nokey=1 {file}')
+           " default=noprint_wrappers=1:nokey=1 '{file}'")
     out = map(lambda s: kwargs['path_o_1'].format(size=s), clargs.sizes)
     out = map(lambda f: cmd.format(file=f), out)
-    out = (cmd.format(file=kwargs['path_i_1']) + ' && ' + ' && '.join(out)).split()
+    out = sl.split(cmd.format(file=kwargs['path_i_1']) + ' && ' + ' && '.join(out))
     return iter((out,))
 
 
@@ -51,13 +52,13 @@ def get_commands_image_1(cfg, clargs, **kwargs):
     out: iter(tuple(str))
     Iterator containing commands.
     """
-    cmd = 'ffmpeg -y -v quiet -stats -i {path_i_1} {common_all}'
-    common = '-f apng -filter:v scale=iw*{size}:ih*{size} {path_o_1}'
+    cmd = "ffmpeg -y -v quiet -stats -i '{path_i_1}' {common_all}"
+    common = "-f apng -filter:v scale=iw*{size}:ih*{size} '{path_o_1}'"
     common_all = map(lambda s: kwargs['path_o_1'].format(size=s), clargs.sizes)
     common_all = map(lambda s: common.format(size=s[0]/100.0, path_o_1=s[1]),
                      zip(clargs.sizes, common_all))
     common_all = ' '.join(common_all)
-    out = cmd.format(path_i_1=kwargs['path_i_1'], common_all=common_all).split()
+    out = sl.split(cmd.format(path_i_1=kwargs['path_i_1'], common_all=common_all))
     return iter((out,))
 
 
@@ -81,21 +82,21 @@ def get_commands_video_1(cfg, clargs, **kwargs):
     out: iter(tuple(str))
     Iterator containing commands.
     """
-    cmd = 'ffmpeg -y -v quiet -stats -i {path_i_1} {common_all}'
+    cmd = "ffmpeg -y -v quiet -stats -i '{path_i_1}' {common_all}"
     common = ('-pix_fmt yuv420p'
               ' -g 1'
               ' -sn -an'
               ' -vf colormatrix=bt601:bt709'
               ' -vf scale=iw*{size}:ih*{size}'
               ' {preset}'
-              ' {path_o_1}')
+              " '{path_o_1}'")
     common_all = map(lambda s: kwargs['path_o_1'].format(size=s), clargs.sizes)
     common_all = map(lambda s: common.format(preset=cfg['presets'][clargs.preset],
                                              size=s[0]/100.0,
                                              path_o_1=s[1]),
                      zip(clargs.sizes, common_all))
     common_all = ' '.join(common_all)
-    out = cmd.format(path_i_1=kwargs['path_i_1'], common_all=common_all).split()
+    out = sl.split(cmd.format(path_i_1=kwargs['path_i_1'], common_all=common_all))
     return iter((out,))
 
 
