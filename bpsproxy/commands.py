@@ -91,7 +91,7 @@ def get_commands_video_1(cfg, clargs, **kwargs):
         " -g 1"
         " -sn -an"
         " -vf colormatrix=bt601:bt709"
-        " -vf scale=iw*{size}:ih*{size}"
+        " -vf scale=ceil(iw*{size}/2)*2:ceil(ih*{size}/2)*2"
         " {preset}"
         " '{path_o_1}'"
     )
