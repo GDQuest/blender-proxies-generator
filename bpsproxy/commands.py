@@ -101,7 +101,7 @@ def get_commands_video_1(cfg, clargs, **kwargs):
     out: iter(tuple(str))
     Iterator containing commands.
     """
-    cmd = "ffmpeg -hwaccel auto -y -v quiet -stats -i '{path_i_1}' {common_all}"
+    cmd = "ffmpeg -hwaccel auto -y -v quiet -stats -noautorotate -i '{path_i_1}' {common_all}"
     common = (
         "-pix_fmt yuv420p"
         " -g 1"
