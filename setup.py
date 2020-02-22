@@ -25,7 +25,7 @@ def readme():
 if __name__ == "__main__":
     setup(
         name="bpsproxy",
-        version="0.2.0",
+        version="0.2.1",
         description="Blender Power Sequencer proxy generator tool",
         long_description=readme(),
         long_description_content_type="text/markdown",
